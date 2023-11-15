@@ -30,6 +30,25 @@
 
 extern IfxCpu_syncEvent g_cpuSyncEvent;
 
+typedef struct{
+
+        float fPllFreq;
+
+        float fSourceFreq;
+        float fSriFreq;
+        float fSpbFreq;
+        float fCpu0Freq;
+        float fCpu1Freq;
+        float fCpu2Freq;
+
+        float fFsiFreq;
+        float fFsi2Freq;
+        float fStmFreq;
+        float fGtmFreq;
+        float fCanFreq;
+
+} ClockSetting; //클럭 분배 확인을 위한 구조체
+
 int core1_main(void)
 {
     IfxCpu_enableInterrupts();
@@ -43,6 +62,22 @@ int core1_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
+    ClockSetting ClockSettingInfo;
+
+    ClockSettingInfo.fPllFreq=IfxScuCcu_getPllFrequency();
+    ClockSettingInfo.fSourceFreq=IfxScuCcu_getSourceFrequency();
+    ClockSettingInfo.fSriFreq=IfxScuCcu_getSriFrequency();
+    ClockSettingInfo.fSpbFreq=IfxScuCcu_getSpbFrequency();
+    ClockSettingInfo.fCpu0Freq=IfxScuCcu_getCpuFrequency(0);
+    ClockSettingInfo.fCpu1Freq=IfxScuCcu_getCpuFrequency(1);
+    ClockSettingInfo.fCpu2Freq=IfxScuCcu_getCpuFrequency(2);
+
+    ClockSettingInfo.fFsiFreq=IfxScuCcu_getFsiFrequency();
+    ClockSettingInfo.fFsi2Freq=IfxScuCcu_getFsi2Frequency();
+    ClockSettingInfo.fStmFreq=IfxScuCcu_getStmFrequency();
+    ClockSettingInfo.fGtmFreq=IfxScuCcu_getGtmFrequency();
+    ClockSettingInfo.fCanFreq=IfxScuCcu_getCanFrequency();
+
     while(1)
     {
     }
