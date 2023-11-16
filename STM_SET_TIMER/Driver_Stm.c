@@ -63,49 +63,59 @@ App_Stm g_Stm; /**< \brief Stm global data */
 /***********************************************************************/
 /*Function*/
 /***********************************************************************/
-IFX_INTERRUPT(STM_Int0Handler, 0, 100);
+IFX_INTERRUPT(STM_Int0Handler, 0, 100); //ISR 함수를 등록하는 함수
+                                        //인수 (isr, vectabNum, prio)
 
-void STM_Int0Handler(void)
+void STM_Int0Handler(void) //인터럽트 핸들러(isr)
 {
     static int flag = 0;
     static int cnt = 0;
 
     IfxStm_clearCompareFlag(g_Stm.stmSfr, g_Stm.stmConfig.comparator);
-    IfxStm_increaseCompare(g_Stm.stmSfr, g_Stm.stmConfig.comparator, 100000000u);
+    //다음 Compare Interrupt가 100,000,000 STM Tick 이후에 발생하도록 하는 것
+    IfxStm_increaseCompare(g_Stm.stmSfr, g_Stm.stmConfig.comparator, 100000000u); //새로운 Compare 값 설정
+
 
     cnt++;
 
     if(flag == 0)
     {
-        IfxPort_setPinLow(IfxPort_P00_5.port, IfxPort_P00_5.pinIndex);
-        flag = 1;
+        IfxPort_setPinLow(IfxPort_P00_5.port, IfxPort_P00_5.pinIndex);//LED ON
+        flag = 1;//바꿔주면서 토글 가능하게 함
     }
     else
     {
-        IfxPort_setPinHigh(IfxPort_P00_5.port, IfxPort_P00_5.pinIndex);
+        IfxPort_setPinHigh(IfxPort_P00_5.port, IfxPort_P00_5.pinIndex);//LED OFF
         flag = 0;
     }
 
     IfxCpu_enableInterrupts();
 }
 
-void IfxStmDemo_init(void)
+void IfxStmDemo_init(void) //stm 모듈 초기화  (정의)
 {
+    //printf("IfxStmDemo_init() called\n");//추가
+
     /* disable interrupts */
     boolean interruptState = IfxCpu_disableInterrupts();
 
-    IfxStm_enableOcdsSuspend(&MODULE_STM0);
+    //초기화
+   // g_Stm.LedBlink=0;
+   // g_Stm.counter=0;
 
-    g_Stm.stmSfr = &MODULE_STM0;
-    IfxStm_initCompareConfig(&g_Stm.stmConfig);
+    IfxStm_enableOcdsSuspend(&MODULE_STM0);//우리가 디버거로 멈출때 Timer도 멈추어 달라는 뜻입니다.
 
-    g_Stm.stmConfig.triggerPriority = 100u;
-    g_Stm.stmConfig.typeOfService   = IfxSrc_Tos_cpu0;
-    g_Stm.stmConfig.ticks           = 100000000;
+    g_Stm.stmSfr = &MODULE_STM0; //STM에 0번 모듈을 사용
+    IfxStm_initCompareConfig(&g_Stm.stmConfig); //g_Stm.stmConfig라는 구조체안에 초기화하고 싶은 파라미터를 집어넣는 것
 
-    IfxStm_initCompare(g_Stm.stmSfr, &g_Stm.stmConfig);
+    g_Stm.stmConfig.triggerPriority = 100u; //인터럽트를 발생시키기 위한 우선순위를 집어넣는
+                                            //0~255까지 가능하고 255가 우선순위가 가장높음
+    g_Stm.stmConfig.typeOfService   = IfxSrc_Tos_cpu0; //인터럽트가 발생할때 이것을 어느 CPU에게 알려주냐
+    g_Stm.stmConfig.ticks           = 100000000; //1초(1sec)=10^8 ==>100MHz로 동작하고 있기때문
+                                                 //값이 100,000(10^5)이면 1ms
+    IfxStm_initCompare(g_Stm.stmSfr, &g_Stm.stmConfig); //ILLD 함수-- 내부적으로 stmConfig.ticks의 1초를 더해줌
+    //즉, CMP(비교)레지스터를 업데이트 시켜주는 것
 
     /* enable interrupts again */
     IfxCpu_restoreInterrupts(interruptState);
 }
-
